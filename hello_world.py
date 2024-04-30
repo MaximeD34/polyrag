@@ -3,12 +3,14 @@ import os
 from flask import Flask
 from openai import OpenAI
 
+import openai
+openai.api_key = 'sk-proj-WKoMoUxcBoLAooeZW7q6T3BlbkFJqKSe48dOzJzbEfOv4aag'
+
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 
 print("-----------------")
 print("Starting the server")
 
-KEY = "sk-proj-WKoMoUxcBoLAooeZW7q6T3BlbkFJqKSe48dOzJzbEfOv4aag"
 #setup the openai api key
 
 print("loading the data...")
