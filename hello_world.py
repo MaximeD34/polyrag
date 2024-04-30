@@ -5,12 +5,21 @@ from openai import OpenAI
 
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 
+print("-----------------")
+print("Starting the server")
+
 KEY = "sk-proj-WKoMoUxcBoLAooeZW7q6T3BlbkFJqKSe48dOzJzbEfOv4aag"
 #setup the openai api key
 
+print("loading the data...")
 documents= SimpleDirectoryReader("data_temp").load_data()
+print("data loaded")
+print("creating the index...")
 index = VectorStoreIndex.from_documents(documents)
+print("index created")
+print("creating the query engine...")
 query_engine = index.as_query_engine()
+print("query engine created")
 
 app = Flask(__name__)
 
