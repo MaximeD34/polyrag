@@ -10,7 +10,7 @@ def hello():
 
 @app.route('/<name>')
 def hello_name(name):
-    return 'Hello {}!'.format(name)
+    return 'Hello {}! new version'.format(name)
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
