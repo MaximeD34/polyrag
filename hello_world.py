@@ -1,27 +1,22 @@
 import os
 
 from flask import Flask
-from openai import OpenAI
 
+#for the file transfer
+from flask import Flask, request
+from werkzeug.utils import secure_filename
+#--
+
+#for openai
+from openai import OpenAI
 import openai
 openai.api_key = 'sk-proj-WKoMoUxcBoLAooeZW7q6T3BlbkFJqKSe48dOzJzbEfOv4aag'
+#--
 
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 
-print("-----------------")
-print("Starting the server")
+import time
 
-#setup the openai api key
-
-print("loading the data...")
-documents= SimpleDirectoryReader("data_temp").load_data()
-print("data loaded")
-print("creating the index...")
-index = VectorStoreIndex.from_documents(documents)
-print("index created")
-print("creating the query engine...")
-query_engine = index.as_query_engine()
-print("query engine created")
 
 app = Flask(__name__)
 
@@ -45,7 +40,41 @@ def openai():
     
     return nodes 
 
+@app.route('/upload', methods=['POST'])
+def upload_file():
+
+    storage_path = os.getenv('STORAGE_PATH', '../test_storage')
+
+    if 'file' not in request.files:
+        return {"error": "No file part"}, 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return {"error": "No selected file"}, 400
+
+    filename = secure_filename(file.filename)
+    file.save(os.path.join(storage_path, filename))
+
+    return {"message": "File uploaded successfully"}, 200
+
+
 if __name__ == '__main__':
+
+    print("-----------------")
+    print("Starting the server")
+
+    print(f"{time.ctime()} - loading the data...")
+    documents= SimpleDirectoryReader("data_temp").load_data()
+    print(f"{time.ctime()} - data loaded")
+
+    print(f"{time.ctime()} - creating the index...")
+    index = VectorStoreIndex.from_documents(documents)
+    print(f"{time.ctime()} - index created")
+
+    print(f"{time.ctime()} - creating the query engine...")
+    query_engine = index.as_query_engine()
+    print(f"{time.ctime()} - query engine created")
+
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
     app.run(host='127.0.0.1', port=port)
