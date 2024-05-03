@@ -57,6 +57,11 @@ def upload_file():
 
     return {"message": "File uploaded successfully"}, 200
 
+@app.route('/list_files')
+def list_files():
+    storage_path = os.getenv('STORAGE_PATH', '../test_storage')
+    files = os.listdir(storage_path)
+    return '<br>'.join(files)
 
 if __name__ == '__main__':
 
@@ -78,3 +83,5 @@ if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
     app.run(host='127.0.0.1', port=port)
+
+    

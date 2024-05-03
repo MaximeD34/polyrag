@@ -3,3 +3,5 @@ __pycache__/
 
 polyrag_venv/
 .history/
+
+chat.json
