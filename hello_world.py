@@ -59,9 +59,12 @@ def upload_file():
 
 @app.route('/list_files')
 def list_files():
-    storage_path = os.getenv('STORAGE_PATH', '../test_storage')
-    files = os.listdir(storage_path)
-    return '<br>'.join(files)
+    try:
+        storage_path = os.getenv('STORAGE_PATH', '../test_storage')
+        files = os.listdir(storage_path)
+        return '<br>'.join(files)
+    except Exception as e:
+        return str(e)
 
 if __name__ == '__main__':
 
