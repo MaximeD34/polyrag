@@ -66,6 +66,14 @@ def list_files():
     except Exception as e:
         return str(e)
 
+@app.route('/debug', methods=['GET'])
+def debug():
+    try:
+        directories = os.listdir('/app')
+    except Exception as e:
+        directories = str(e)
+    return {"directories": directories}, 200
+
 if __name__ == '__main__':
 
     print("-----------------")
