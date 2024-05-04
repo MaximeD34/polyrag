@@ -12,7 +12,7 @@ from openai import OpenAI
 import openai
 print("ok1")
 openai.api_key = os.getenv("OPENAI_KEY")
-openai.api_key = "sk-proj-fRw4wXtVT1cIO3W8EHawT3BlbkFJkhsLrSm5bNE45Eh75GW2"
+#openai.api_key = "sk-proj-fRw4wXtVT1cIO3W8EHawT3BlbkFJkhsLrSm5bNE45Eh75GW2"
 print("ok2")
 print(openai.api_key)
 
