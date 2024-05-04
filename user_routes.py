@@ -96,7 +96,7 @@ def db_selectAll(table_name):
         return {"error": "Table not found"}, 404
 
 from models import Users
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 #params : username, password, email
 @user_routes.route('/create_user', methods=['POST'])
 def create_user():
@@ -112,3 +112,27 @@ def create_user():
         return {"message": "User created successfully"}, 200
     except Exception as e:
         return str(e), 400
+    
+from flask_jwt_extended import create_access_token, create_refresh_token
+@user_routes.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email', None)
+    password = data.get('password', None)
+
+    user = Users.query.filter_by(email=email).first()
+    if user and check_password_hash(user.hashed_password, password):
+        access_token = create_access_token(identity=email)
+        refresh_token = create_refresh_token(identity=email)
+        return jsonify(access_token=access_token, refresh_token=refresh_token), 200
+
+    return jsonify({"msg": "Bad username or password"}), 401
+
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+@user_routes.route('/user_infos', methods=['GET'])
+@jwt_required()
+def user_infos():
+    current_user = get_jwt_identity()
+    user = Users.query.filter_by(email=current_user).first()
+    return jsonify(username=user.username, email=user.email), 200

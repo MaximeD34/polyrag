@@ -44,7 +44,18 @@ def create_app():
 
     return app
 
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token
+def create_jwt():
+    #initialize the jwt
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'local_jwt_secret_key')
+    app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+    jwt = JWTManager(app)
+    #--
+
+    return jwt
+
 app = create_app()
+jwt = create_jwt()
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
