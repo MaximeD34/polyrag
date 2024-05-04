@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 #for openai
 from openai import OpenAI
 import openai
-openai.api_key = os.getenv("OPENAI_KEY")
+
 #--
 
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
@@ -32,13 +32,20 @@ def hello_name(name):
 @app.route('/openai')
 #returns a json with the nodes datas
 def openai():
-    response = query_engine.query("What are the steps to cleaning the print cartridge contacts ?")
-    
-    nodes = {node_dict['node']['id_']: {k: v for k, v in node_dict['node'].items() if k != 'id_'} 
-         for node in response.source_nodes 
-         for node_dict in [node.to_dict()]}
-    
-    return nodes 
+
+    try:
+        openai.api_key = os.getenv("OPENAI_KEY")
+
+        response = query_engine.query("What are the steps to cleaning the print cartridge contacts ?")
+        
+        nodes = {node_dict['node']['id_']: {k: v for k, v in node_dict['node'].items() if k != 'id_'} 
+            for node in response.source_nodes 
+            for node_dict in [node.to_dict()]}
+        
+        return nodes
+
+    except Exception as e:
+        return str(e)
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
