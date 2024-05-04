@@ -15,6 +15,7 @@ dirtyjson==1.0.8
 distro==1.9.0
 exceptiongroup==1.2.1
 Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
 frozenlist==1.4.1
 fsspec==2024.3.1
 greenlet==3.0.3
@@ -53,6 +54,7 @@ openai==1.24.1
 packaging==24.0
 pandas==2.2.2
 pillow==10.3.0
+psycopg2==2.9.9
 pydantic==2.7.1
 pydantic_core==2.18.2
 pypdf==4.2.0
