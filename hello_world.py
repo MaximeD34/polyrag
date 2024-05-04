@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 #for openai
 from openai import OpenAI
 import openai
-openai.api_key = 'sk-proj-WKoMoUxcBoLAooeZW7q6T3BlbkFJqKSe48dOzJzbEfOv4aag'
+openai.api_key = os.getenv("OPENAI_KEY")
 #--
 
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
