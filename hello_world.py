@@ -15,11 +15,30 @@ openai.api_key = os.getenv("OPENAI_KEY")
 openai.api_key = "sk-proj-fRw4wXtVT1cIO3W8EHawT3BlbkFJkhsLrSm5bNE45Eh75GW2"
 print("ok2")
 print(openai.api_key)
-#--
 
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-
 import time
+
+print("-----------------")
+print("Starting the server")
+
+print(f"{time.ctime()} - loading the data...")
+documents= SimpleDirectoryReader("data_temp").load_data()
+print(f"{time.ctime()} - data loaded")
+
+print(f"{time.ctime()} - creating the index...")
+index = VectorStoreIndex.from_documents(documents)
+print(f"{time.ctime()} - index created")
+
+print(f"{time.ctime()} - creating the query engine...")
+query_engine = index.as_query_engine()
+print(f"{time.ctime()} - query engine created")
+
+
+
+#--
+
+
 
 
 app = Flask(__name__)
@@ -86,24 +105,7 @@ def debug():
     return {"directories": directories}, 200
 
 if __name__ == '__main__':
-
-    print("-----------------")
-    print("Starting the server")
-
-    print(f"{time.ctime()} - loading the data...")
-    documents= SimpleDirectoryReader("data_temp").load_data()
-    print(f"{time.ctime()} - data loaded")
-
-    print(f"{time.ctime()} - creating the index...")
-    index = VectorStoreIndex.from_documents(documents)
-    print(f"{time.ctime()} - index created")
-
-    print(f"{time.ctime()} - creating the query engine...")
-    query_engine = index.as_query_engine()
-    print(f"{time.ctime()} - query engine created")
-
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
     app.run(host='127.0.0.1', port=port)
 
-    
