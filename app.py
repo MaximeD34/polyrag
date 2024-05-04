@@ -18,14 +18,18 @@ from user_routes import user_routes
 #--
 
 def create_app():
-    #local db url : postgresql://postgres:{password}@localhost:5432/polyrag_db
+    #local db url : postgres://postgres:{password}@localhost:5432/polyrag_db
     #dokku db url : postgres://postgres:46a6bd3aecb7e1e47348ccd270ba10e4@dokku-postgres-polyrag-db:5432/polyrag_db
 
     app = Flask(__name__)
     
     #configure the database
     local_password = os.getenv('POLYRAG_DB_PASSWORD')
-    url = os.getenv('DATABASE_URL', f'postgresql://postgres:{local_password}@localhost:5432/polyrag_db')
+    
+    url = os.getenv('DATABASE_URL', f'postgres://postgres:{local_password}@localhost:5432/polyrag_db')
+    #change the first postgres to postgresql for the url
+    url = url.replace('postgres', 'postgresql', 1)
+
     app.config['SQLALCHEMY_DATABASE_URI'] = url
     db.init_app(app)
     
