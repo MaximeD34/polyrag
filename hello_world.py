@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 #for openai
 from openai import OpenAI
 import openai
+openai.api_key = os.getenv("OPENAI_KEY")
 
 #--
 
@@ -34,7 +35,7 @@ def hello_name(name):
 def openai():
 
     try:
-        openai.api_key = os.getenv("OPENAI_KEY")
+        
 
         response = query_engine.query("What are the steps to cleaning the print cartridge contacts ?")
         
