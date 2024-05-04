@@ -1,64 +1,42 @@
-import os
-
-from flask import Flask
-
-#for the file transfer
-from flask import Flask, request
+#for the file upload
 from werkzeug.utils import secure_filename
 #--
 
 #for openai
 from openai import OpenAI
 import openai
-print("ok1")
+import os
 openai.api_key = os.getenv("OPENAI_KEY")
 #openai.api_key = "sk-proj-fRw4wXtVT1cIO3W8EHawT3BlbkFJkhsLrSm5bNE45Eh75GW2"
-print("ok2")
-print(openai.api_key)
-
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-import time
-
-print("-----------------")
-print("Starting the server")
-
-print(f"{time.ctime()} - loading the data...")
-documents= SimpleDirectoryReader("data_temp").load_data()
-print(f"{time.ctime()} - data loaded")
-
-print(f"{time.ctime()} - creating the index...")
-index = VectorStoreIndex.from_documents(documents)
-print(f"{time.ctime()} - index created")
-
-print(f"{time.ctime()} - creating the query engine...")
-query_engine = index.as_query_engine()
-print(f"{time.ctime()} - query engine created")
-
-
-
 #--
 
+#for llama
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+#--
 
+#TODO change the path to the data
+documents= SimpleDirectoryReader("data_temp").load_data()
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+#--
 
+#to create route blueprints
+from flask import Blueprint, jsonify, request
+#--
 
-app = Flask(__name__)
+user_routes = Blueprint('user_routes', __name__)
 
-
-@app.route('/')
+@user_routes.route('/')
 def hello():
     return 'Hello World!'
 
-@app.route('/<name>')
+@user_routes.route('/<name>')
 def hello_name(name):
     return 'Hello {}! new version'.format(name)
 
-@app.route('/openai')
-#returns a json with the nodes datas
+@user_routes.route('/openai')
 def openai():
-
     try:
-        
-
         response = query_engine.query("What are the steps to cleaning the print cartridge contacts ?")
         
         nodes = {node_dict['node']['id_']: {k: v for k, v in node_dict['node'].items() if k != 'id_'} 
@@ -70,7 +48,7 @@ def openai():
     except Exception as e:
         return str(e)
 
-@app.route('/upload', methods=['POST'])
+@user_routes.route('/upload', methods=['POST'])
 def upload_file():
 
     storage_path = os.getenv('STORAGE_PATH', '../test_storage')
@@ -87,7 +65,7 @@ def upload_file():
 
     return {"message": "File uploaded successfully"}, 200
 
-@app.route('/list_files')
+@user_routes.route('/list_files')
 def list_files():
     try:
         storage_path = os.getenv('STORAGE_PATH', '../test_storage')
@@ -96,7 +74,7 @@ def list_files():
     except Exception as e:
         return str(e)
 
-@app.route('/debug', methods=['GET'])
+@user_routes.route('/debug', methods=['GET'])
 def debug():
     try:
         directories = os.listdir('/app')
@@ -104,8 +82,33 @@ def debug():
         directories = str(e)
     return {"directories": directories}, 200
 
-if __name__ == '__main__':
-    # Bind to PORT if defined, otherwise default to 5000.
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='127.0.0.1', port=port)
+from database import db
+from sqlalchemy import inspect
+@user_routes.route('/db_selectAll/<table_name>', methods=['GET'])
+def db_selectAll(table_name):
+    inspector = inspect(db.engine)
 
+    if table_name in inspector.get_table_names():
+        table = db.Model.metadata.tables[table_name]
+        query = db.session.query(table).all()
+        return jsonify([row._asdict() for row in query])
+    else:
+        return {"error": "Table not found"}, 404
+
+from models import Users
+from werkzeug.security import generate_password_hash
+#params : username, password, email
+@user_routes.route('/create_user', methods=['POST'])
+def create_user():
+    try:
+        data = request.get_json()
+        username = data['username']
+        email = data['email']
+        hashed_password = generate_password_hash(data['password'])
+
+        user = Users(username=username, email=email, hashed_password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+        return {"message": "User created successfully"}, 200
+    except Exception as e:
+        return str(e), 400
