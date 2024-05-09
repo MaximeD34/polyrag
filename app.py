@@ -15,6 +15,8 @@ from models import Users
 
 #for the routes
 from user_routes import user_routes
+from login_routes import login_routes
+from files_routes import files_routes
 #--
 
 def create_app():
@@ -33,13 +35,14 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = url
     db.init_app(app)
     
-    
     with app.app_context():
         db.create_all()
-    #--
+    #-- end of database configuration
 
     #register the routes
     app.register_blueprint(user_routes)
+    app.register_blueprint(login_routes)
+    app.register_blueprint(files_routes)
     #--
 
     return app
