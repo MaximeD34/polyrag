@@ -17,6 +17,7 @@ from models import Users
 from user_routes import user_routes
 from login_routes import login_routes
 from files_routes import files_routes
+from ai_routes import ai_routes
 #--
 
 def create_app():
@@ -43,6 +44,7 @@ def create_app():
     app.register_blueprint(user_routes)
     app.register_blueprint(login_routes)
     app.register_blueprint(files_routes)
+    app.register_blueprint(ai_routes)
     #--
 
     return app
