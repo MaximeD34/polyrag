@@ -1,0 +1,4 @@
+This website implements RAG (retrieval augmented generation). 
+It allows the user to query their text documents with natural language.
+
+-- Maxime Dudognon

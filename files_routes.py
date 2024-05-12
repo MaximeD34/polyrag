@@ -24,7 +24,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 @jwt_required()
 def upload_file():
 
-    storage_path = os.getenv('STORAGE_PATH', '../test_storage')
+    storage_path = os.getenv('STORAGE_PATH', '../local_test_persistent_storage/')
 
     if 'file' not in request.files:
         return {"error": "No file part"}, 400
@@ -46,6 +46,11 @@ def upload_file():
     if file_extension not in allowed_extensions:
         return {"error": "Invalid file extension"}, 400
     
+    #check if the document is not empty
+    if file.read() == b'':
+        return {"error": "Empty file"}, 400
+    file.seek(0)
+
     is_public = request.form['is_public']
     if is_public == 'true':
         is_public = True

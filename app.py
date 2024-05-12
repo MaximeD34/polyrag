@@ -20,6 +20,10 @@ from files_routes import files_routes
 from ai_routes import ai_routes
 #--
 
+#global variable for the storage path
+storage_path = os.getenv('STORAGE_PATH', '/home/maxime/PolyRag/backend/../local_test_persistent_storage/')
+#
+
 def create_app():
     #local db url : postgres://postgres:{password}@localhost:5432/polyrag_db
     #dokku db url : postgres://postgres:46a6bd3aecb7e1e47348ccd270ba10e4@dokku-postgres-polyrag-db:5432/polyrag_db
@@ -46,6 +50,11 @@ def create_app():
     app.register_blueprint(files_routes)
     app.register_blueprint(ai_routes)
     #--
+
+    from embeddings_manager import create_all_unexisting_embedding
+
+    with app.app_context():
+        create_all_unexisting_embedding(storage_path)
 
     return app
 
