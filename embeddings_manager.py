@@ -80,4 +80,3 @@ def getMergedIndexWithFileIds(storage_path, file_ids):
             continue
 
     return index, unavailable_files
-
