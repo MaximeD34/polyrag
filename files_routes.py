@@ -85,7 +85,7 @@ def upload_file():
 @files_routes.route('/list_files')
 def list_files():
     try:
-        storage_path = os.getenv('STORAGE_PATH', '../test_storage')
+        storage_path = os.getenv('STORAGE_PATH', '../test_storage') #TODO import from app.py instead of redefining it
         files = os.listdir(storage_path)
         return '<br>'.join(files)
     except Exception as e:
