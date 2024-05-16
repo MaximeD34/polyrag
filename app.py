@@ -71,6 +71,9 @@ def create_jwt():
 app = create_app()
 jwt = create_jwt()
 
+from flask_cors import CORS
+CORS(app, supports_credentials=True)
+
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
