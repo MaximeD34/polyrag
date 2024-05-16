@@ -75,14 +75,16 @@ def query():
     user_id = get_jwt_identity()
 
     authorized_files = getAuthorizedFilesFromList(user_id, filecodes)
-    print(authorized_files)
+    # print(authorized_files)
 
     if not authorized_files:
         return jsonify({"msg" : "No authorized files to search in"}), 200
 
     from embeddings_manager import getMergedIndexWithFileIds
-    
-    from app import storage_path
+
+    #global variable for the storage path
+    storage_path = os.getenv('STORAGE_PATH', '/home/maxime/PolyRag/backend/../local_test_persistent_storage/')
+    #
     index, skippedFiles = getMergedIndexWithFileIds(storage_path, authorized_files)
 
 
@@ -97,10 +99,9 @@ def query():
     # query_engine = index.as_query_engine(filters=filters)
 
     #TODO : add a summarizer ?
-    # configure retriever
 
-    print("authorized_files", authorized_files)
-    print("skippedFiles", skippedFiles)
+    # print("authorized_files", authorized_files)
+    # print("skippedFiles", skippedFiles)
 
     retriever = VectorIndexRetriever(
         index=index,

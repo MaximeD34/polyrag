@@ -34,18 +34,43 @@ def create_user():
     except Exception as e:
         return {"message": "The user cannot be created"}, 400
 
+# @login_routes.route('/login_debug', methods=['POST'])
+# def login_debug():
+#     data = request.get_json()
+#     email = data.get('email', None)
+#     password = data.get('password', None)
+
+#     user = Users.query.filter_by(email=email).first()
+#     if user and check_password_hash(user.hashed_password, password):
+#         user_id = user.id
+#         access_token = create_access_token(identity=user_id)
+#         refresh_token = create_refresh_token(identity=user_id)
+#         return jsonify(access_token=access_token, refresh_token=refresh_token), 200
+
+#     return jsonify({"msg": "Bad username or password"}), 401
+
+from flask import make_response
+from flask_jwt_extended import set_access_cookies, set_refresh_cookies
+
 @login_routes.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     email = data.get('email', None)
     password = data.get('password', None)
 
+    print("login", email, password)
+
     user = Users.query.filter_by(email=email).first()
     if user and check_password_hash(user.hashed_password, password):
         user_id = user.id
         access_token = create_access_token(identity=user_id)
         refresh_token = create_refresh_token(identity=user_id)
-        return jsonify(access_token=access_token, refresh_token=refresh_token), 200
+
+        # Create a response and set the access and refresh tokens as HttpOnly cookies
+        response = make_response(jsonify({"msg": "Login successful"}), 200)
+        set_access_cookies(response, access_token)
+        set_refresh_cookies(response, refresh_token)
+        return response
 
     return jsonify({"msg": "Bad username or password"}), 401
 
@@ -57,8 +82,12 @@ def refresh():
     Refreshes the access token for the current user.
 
     Returns:
-        A JSON response containing the new access token.
+        A response with a new access token in a HttpOnly cookie
     """
     current_user = get_jwt_identity()
     new_access_token = create_access_token(identity=current_user)
-    return jsonify(access_token=new_access_token), 200
+
+    # Create a response and set the new access token as a HttpOnly cookie
+    response = make_response(jsonify({"msg": "Access token refreshed"}), 200)
+    set_access_cookies(response, new_access_token)
+    return response

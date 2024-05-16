@@ -25,6 +25,8 @@ storage_path = os.getenv('STORAGE_PATH', '/home/maxime/PolyRag/backend/../local_
 #
 
 def create_app():
+
+    print("app was created")
     #local db url : postgres://postgres:{password}@localhost:5432/polyrag_db
     #dokku db url : postgres://postgres:46a6bd3aecb7e1e47348ccd270ba10e4@dokku-postgres-polyrag-db:5432/polyrag_db
 
@@ -59,10 +61,21 @@ def create_app():
     return app
 
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token
+from datetime import timedelta
 def create_jwt():
     #initialize the jwt
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'local_jwt_secret_key')
     app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+    app.config['JWT_TOKEN_LOCATION'] = ['cookies']
+    app.config['JWT_COOKIE_CSRF_PROTECT'] = True
+    app.config['JWT_CSRF_CHECK_FORM'] = False
+    app.config['JWT_CSRF_METHODS'] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
+    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=14)
+    app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
+    app.config['JWT_COOKIE_SECURE'] = False  # TODO Set to True if using HTTPS
+    # app.config['JWT_COOKIE_DOMAIN'] = "http://localhost:3000"  # TODO Set to frontend domain if needed
+
     jwt = JWTManager(app)
     #--
 
@@ -71,10 +84,11 @@ def create_jwt():
 app = create_app()
 jwt = create_jwt()
 
+
 from flask_cors import CORS
-CORS(app, supports_credentials=True)
+CORS(app,  supports_credentials=True)
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='127.0.0.1', port=port)
+    app.run(host='localhost', port=port)
