@@ -55,8 +55,8 @@ def create_app():
 
     from embeddings_manager import create_all_unexisting_embedding
 
-    with app.app_context():
-        create_all_unexisting_embedding(storage_path)
+    # with app.app_context():
+    #     create_all_unexisting_embedding(storage_path)
 
     return app
 
@@ -74,7 +74,10 @@ def create_jwt():
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=14)
     app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
     app.config['JWT_COOKIE_SECURE'] = False  # TODO Set to True if using HTTPS
-    # app.config['JWT_COOKIE_DOMAIN'] = "http://localhost:3000"  # TODO Set to frontend domain if needed
+    if os.getenv('FLASK_ENV') == 'production':
+        app.config['JWT_COOKIE_DOMAIN'] = '.cluster-ig3.igpolytech.fr'
+    else:
+        app.config['JWT_COOKIE_DOMAIN'] = 'localhost'
 
     jwt = JWTManager(app)
     #--
