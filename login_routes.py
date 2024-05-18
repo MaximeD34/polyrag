@@ -77,12 +77,19 @@ def refresh():
     set_access_cookies(response, new_access_token)
     return response
 
+#TODO put all the env in a file
+import os
+
 @login_routes.route('/logout', methods=['POST'])
 def logout():
     response = make_response({"msg": "Logout successful"})
-    response.delete_cookie('access_token_cookie')
-    response.delete_cookie('csrf_access_token')
-    response.delete_cookie('refresh_token_cookie')
-    response.delete_cookie('csrf_refresh_token')
+    if os.getenv('FLASK_ENV') == 'production':
+        domain = ".cluster-ig3.igpolytech.fr"
+    else:
+        domain = "localhost"
+    response.delete_cookie('access_token_cookie', domain=domain)
+    response.delete_cookie('csrf_access_token', domain=domain)
+    response.delete_cookie('refresh_token_cookie', domain=domain)
+    response.delete_cookie('csrf_refresh_token', domain=domain)
     return response
 
