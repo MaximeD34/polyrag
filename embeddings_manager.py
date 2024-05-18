@@ -10,6 +10,9 @@ import os
 metadata_fn = lambda filename: {'file_name' : filename}
 
 def force_create_embedding(storage_path, file_id, user_id, file_name):
+    
+    print("Creating embedding for file", file_id, "for user", user_id, "with name", file_name)
+
     #forces the creation of the embedding for the file, by either creating the index or overwriting it
 
     doc_embedding_storage_path = os.path.join(storage_path, str(file_id)+ "_embeddings")

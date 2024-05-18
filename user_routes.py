@@ -2,15 +2,26 @@
 from flask import Blueprint, jsonify, request
 #--
 
+#for the database
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import and_, not_
+from database import db
+from models import Users, Files
+#--
+
 user_routes = Blueprint('user_routes', __name__)
 
 @user_routes.route('/')
 def hello():
-    return 'Hello World!'
-
+    return 'Polyrag backend'
 
 from database import db
 from sqlalchemy import inspect
+
+# ---------
+# TODO TO REMOVE (debugging purposes)
+
+#TODO remove this route
 @user_routes.route('/db_selectAll/<table_name>', methods=['GET'])
 def db_selectAll(table_name):
     inspector = inspect(db.engine)
@@ -21,6 +32,9 @@ def db_selectAll(table_name):
         return jsonify([row._asdict() for row in query])
     else:
         return {"error": "Table not found"}, 404
+
+# TODO TO REMOVE (debugging purposes)
+# ---------
 
 
 from models import Users
@@ -37,3 +51,32 @@ def user_infos():
         return {"error": "User not found"}, 404
     else:
         return jsonify(username=user.username, email=user.email), 200
+
+@user_routes.route('/user_files', methods=['GET'])
+@jwt_required()
+def user_files():
+    current_user_id = get_jwt_identity()
+    files = db.session.query(Files.id, Files.file_name, Files.is_public, Files.user_id).filter(Files.user_id == current_user_id).all()
+    files = [{"id": file.id, 
+              "file_name": file.file_name, 
+              "is_public": file.is_public,
+              "author": db.session.query(Users.username).filter(Users.id == file.user_id).first()[0]
+              } for file in files]
+    return jsonify(files), 200
+
+
+
+#returns all the public files EXCEPT the ones of the current user
+@user_routes.route('/all_public_files', methods=['GET'])
+@jwt_required()
+def all_public_files():
+    current_user_id = get_jwt_identity()
+    files = db.session.query(Files.id, Files.file_name, Files.is_public, Files.user_id).filter(and_(Files.is_public == True, Files.user_id != current_user_id)).all()
+
+    files = [{"id": file.id, 
+              "file_name": file.file_name, 
+              "is_public": file.is_public, 
+              "author": db.session.query(Users.username).filter(Users.id == file.user_id).first()[0]
+              } for file in files]
+    return jsonify(files), 200
+

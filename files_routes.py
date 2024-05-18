@@ -18,8 +18,11 @@ import os
 from werkzeug.utils import secure_filename
 #--
 
-from flask_jwt_extended import jwt_required, get_jwt_identity
+#to generate the embeddings
+from embeddings_manager import force_create_embedding
+#--
 
+from flask_jwt_extended import jwt_required, get_jwt_identity
 @files_routes.route('/upload', methods=['POST'])
 @jwt_required()
 def upload_file():
@@ -80,8 +83,13 @@ def upload_file():
     #saves the file in the user folder with its id as file name
     file.save(os.path.join(storing_path, str(file_entity.id) + "_" + user_filename))
 
+    #creates the embedding for the file
+    force_create_embedding(storage_path, file_entity.id, current_user_id, user_filename)
+
     return {"message": "File uploaded successfully"}, 200
 
+#for debugging purposes
+#TODO remove this route
 @files_routes.route('/list_files')
 def list_files():
     try:
@@ -91,6 +99,8 @@ def list_files():
     except Exception as e:
         return str(e)
 
+#for debugging purposes
+#TODO remove this route
 @files_routes.route('/debug', methods=['GET'])
 def debug():
     try:
