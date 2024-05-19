@@ -87,6 +87,10 @@ def create_jwt():
 app = create_app()
 jwt = create_jwt()
 
+#handle crashes
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify(error=str(e)), 500
 
 from flask_cors import CORS
 CORS(app,  supports_credentials=True)

@@ -155,6 +155,30 @@ def modify_file(file_id):
 
     return {"message": "File modified successfully"}, 200
 
+@files_routes.route('/delete/<int:file_id>', methods=['DELETE'])
+@jwt_required()
+def delete_file(file_id):
+
+    current_user_id = get_jwt_identity()
+
+    file = Files.query.filter_by(id=file_id).first()
+    if file is None:
+        return {"error": "File not found"}, 404
+
+    if file.user_id != current_user_id:
+        return {"error": "Unauthorized"}, 401
+
+    #delete the file from the storage
+    storage_path = os.getenv('STORAGE_PATH', '../local_test_persistent_storage/')
+    storing_path = os.path.join(storage_path, str(current_user_id))
+    os.remove(os.path.join(storing_path, str(file.id) + "_" + file.file_name))
+
+    #delete the file from the database
+    db.session.delete(file)
+    db.session.commit()
+
+    return {"message": "File deleted successfully"}, 200
+
 #for debugging purposes
 #TODO remove this route
 @files_routes.route('/list_files')
