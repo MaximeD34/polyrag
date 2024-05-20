@@ -13,7 +13,7 @@ user_routes = Blueprint('user_routes', __name__)
 
 @user_routes.route('/')
 def hello():
-    return 'Polyrag backend'
+    return 'Polyrag backend v 20/05 1806'
 
 from database import db
 from sqlalchemy import inspect
