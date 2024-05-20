@@ -168,9 +168,16 @@ def delete_file(file_id):
     if file.user_id != current_user_id:
         return {"error": "Unauthorized"}, 401
 
-    #delete the file from the storage
     storage_path = os.getenv('STORAGE_PATH', '../local_test_persistent_storage/')
     storing_path = os.path.join(storage_path, str(current_user_id))
+
+    import shutil
+
+    #delete the embedding from the storage
+    shutil.rmtree(os.path.join(storage_path, str(file.id) + "_embeddings"))     
+        
+    #delete the file from the storage
+    print(os.path.join(storing_path, str(file.id) + "_" + file.file_name))
     os.remove(os.path.join(storing_path, str(file.id) + "_" + file.file_name))
 
     #delete the file from the database
