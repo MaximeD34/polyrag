@@ -93,7 +93,7 @@ def server_error(e):
     return jsonify(error=str(e)), 500
 
 from flask_cors import CORS
-CORS(app,  supports_credentials=True)
+CORS(app,  methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],supports_credentials=True)
 
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
