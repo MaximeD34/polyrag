@@ -60,7 +60,7 @@ def login():
     return jsonify({"msg": "Bad username or password"}), 401
 
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
-@login_routes.route('/refresh', methods=['GET'])
+@login_routes.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
     """
