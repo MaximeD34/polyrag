@@ -19,18 +19,37 @@ class Files(db.Model):
     def __repr__(self):
         return '<File %r>' % self.file_name
     
-from enum import Enum
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import DDL
+from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.dialects.postgresql import ENUM
 
-class StatusEnum(Enum):
-    pending = 'pending'
-    done = 'done'
-    failed = 'failed'
+class CreateEnumType(DDL):
+    """Create an ENUM type."""
+
+    def __init__(self, enum):
+        self.enum = enum
+        DDL.__init__(self, "CREATE TYPE %s AS ENUM (%s)" % (enum.name, enum.enum_list))
+
+    def execute(self, bind, schema, **kw):
+        try:
+            DDL.execute(self, bind, schema, **kw)
+        except ProgrammingError as e:
+            if 'already exists' not in str(e.orig):
+                raise e
+
+class StatusEnum(ENUM):
+    """Enum type for status."""
+
+    def create(self, bind=None, checkfirst=False):
+        if not checkfirst or not bind.dialect.has_type(bind, self.name):
+            bind.execute(CreateEnumType(self))
+
+status_enum = StatusEnum('pending', 'done', 'failed', name='statusenum')
 
 class EmbeddingStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     file_id = db.Column(db.Integer, db.ForeignKey('files.id'), nullable=False)
-    status = db.Column(SQLEnum(StatusEnum), nullable=False) #the status of the embedding
+    status = db.Column(status_enum, nullable=False) #the status of the embedding
 
     def __repr__(self):
         return '<Embedding %r>' % self.status

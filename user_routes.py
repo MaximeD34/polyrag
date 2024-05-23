@@ -36,6 +36,25 @@ def db_selectAll(table_name):
 # TODO TO REMOVE (debugging purposes)
 # ---------
 
+#to remove all the db and the files
+#TODO remove this route 
+@user_routes.route('/db_drop_all', methods=['GET'])
+def db_drop_all():
+    db.drop_all()
+    db.create_all()
+
+    import os
+
+    #remove all the files
+    storage_path = os.getenv('STORAGE_PATH', '../local_test_persistent_storage/')
+    import shutil
+    try:
+        shutil.rmtree(storage_path)
+    except:
+        return 'Error while deleting the storage path'
+        pass
+    return 'Database dropped and recreated'
+
 
 from models import Users
 
