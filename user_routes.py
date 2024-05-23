@@ -105,7 +105,7 @@ def all_public_files():
               } for file in files]
     return jsonify(files), 200
 
-from models import EmbeddingStatus, StatusEnum
+from models import EmbeddingStatus
 
 # class StatusEnum(Enum):
 #     pending = 'pending'
@@ -130,7 +130,7 @@ def private_files_status():
     embeddingStatus = db.session.query(EmbeddingStatus).join(Files, EmbeddingStatus.file_id == Files.id).filter(Files.user_id == current_user_id).all()
     
     embeddingStatus = [{"file_id": embedding.file_id, 
-                        "status": embedding.status.value} for embedding in embeddingStatus]
+                        "status": embedding.status} for embedding in embeddingStatus]
     return jsonify(embeddingStatus), 200
 
 #returns all the public files status
@@ -142,5 +142,5 @@ def public_files_status():
     embeddingStatus = db.session.query(EmbeddingStatus).join(Files, EmbeddingStatus.file_id == Files.id).filter(and_(Files.is_public == True, Files.user_id != current_user_id)).all()
     
     embeddingStatus = [{"file_id": embedding.file_id, 
-                        "status": embedding.status.value} for embedding in embeddingStatus]
+                        "status": embedding.status} for embedding in embeddingStatus]
     return jsonify(embeddingStatus), 200

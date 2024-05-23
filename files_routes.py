@@ -40,7 +40,7 @@ def check_document_name(file_name):
     return None
 
 from application import app
-from models import EmbeddingStatus, StatusEnum
+from models import EmbeddingStatus
 import time
 from flask_socketio import SocketIO
 from flask_socketio import SocketIO, emit
@@ -93,12 +93,12 @@ def upload_file_blocking(file_data, is_public, secured_filename, current_user_id
         db.session.commit()  # commit file_entity to the database
 
         #add the file to the status table
-        embedding_status = EmbeddingStatus(file_id=file_entity.id, status=StatusEnum.pending)
+        embedding_status = EmbeddingStatus(file_id=file_entity.id, status="pending")
         db.session.add(embedding_status)
         db.session.commit()
 
         #send an update to the client
-        socketio.emit('embedding_status', {"file_id": file_entity.id, "status": StatusEnum.pending.value})
+        socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "pending"})
         print("emmited")
 
         try:
@@ -122,20 +122,20 @@ def upload_file_blocking(file_data, is_public, secured_filename, current_user_id
             print("Time taken: " + str(time_end - time_start))
 
             #update the status of the embedding
-            embedding_status.status = StatusEnum.done
+            embedding_status.status = "done"
             db.session.commit() 
 
             #send an update to the client
-            socketio.emit('embedding_status', {"file_id": file_entity.id, "status": StatusEnum.done.value})
+            socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "done"})
             print("emmited")
         except Exception as e:
             print("Error: " + str(e))
             #update the status of the embedding
-            embedding_status.status = StatusEnum.error
+            embedding_status.status = "error"
             db.session.commit() 
 
             #send an update to the client
-            socketio.emit('embedding_status', {"file_id": file_entity.id, "status": StatusEnum.error.value})
+            socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "error"})
 
 from threading import Thread
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -202,7 +202,7 @@ def modify_file(file_id):
     
     #check if the file is done processing
     embedding_status = EmbeddingStatus.query.filter_by(file_id=file.id).first()
-    if embedding_status.status != StatusEnum.done:
+    if embedding_status.status != "done":
         return {"error": "The file is not done processing"}, 400
 
     is_public = request.form['is_public']
@@ -253,7 +253,7 @@ def delete_file(file_id):
     
     #check if the file is done processing
     embedding_status = EmbeddingStatus.query.filter_by(file_id=file.id).first()
-    if embedding_status.status != StatusEnum.done:
+    if embedding_status.status != "done":
         return {"error": "The file is not done processing"}, 400
 
     if file.user_id != current_user_id:
