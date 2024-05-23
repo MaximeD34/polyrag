@@ -43,8 +43,35 @@ from application import app
 from models import EmbeddingStatus, StatusEnum
 import time
 from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
+import os
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+url_front = os.getenv('URL_FRONT', 'http://localhost:3000')
+
+socketio = SocketIO(app, cors_allowed_origins=url_front)
+
+@socketio.on('connect')
+def handle_connect():
+    try:
+        print('Client connected')
+        emit('response', {'message': 'Connected to server'})
+    except Exception as e:
+        print(f'Error: {e}')
+
+@socketio.on('message')
+def handle_message(data):
+    try:
+        print('Message received:', data)
+        emit('response', {'message': 'Message received'})
+    except Exception as e:
+        print(f'Error: {e}')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    try:
+        print('Client disconnected')
+    except Exception as e:
+        print(f'Error: {e}')
 
 #this is called on a different thread 
 def upload_file_blocking(file_data, is_public, secured_filename, current_user_id):
@@ -72,6 +99,7 @@ def upload_file_blocking(file_data, is_public, secured_filename, current_user_id
 
         #send an update to the client
         socketio.emit('embedding_status', {"file_id": file_entity.id, "status": StatusEnum.pending.value})
+        print("emmited")
 
         try:
         
@@ -99,6 +127,7 @@ def upload_file_blocking(file_data, is_public, secured_filename, current_user_id
 
             #send an update to the client
             socketio.emit('embedding_status', {"file_id": file_entity.id, "status": StatusEnum.done.value})
+            print("emmited")
         except Exception as e:
             print("Error: " + str(e))
             #update the status of the embedding
@@ -170,6 +199,11 @@ def modify_file(file_id):
 
     if file.user_id != current_user_id:
         return {"error": "Unauthorized"}, 401
+    
+    #check if the file is done processing
+    embedding_status = EmbeddingStatus.query.filter_by(file_id=file.id).first()
+    if embedding_status.status != StatusEnum.done:
+        return {"error": "The file is not done processing"}, 400
 
     is_public = request.form['is_public']
 
@@ -216,6 +250,11 @@ def delete_file(file_id):
     file = Files.query.filter_by(id=file_id).first()
     if file is None:
         return {"error": "File not found"}, 404
+    
+    #check if the file is done processing
+    embedding_status = EmbeddingStatus.query.filter_by(file_id=file.id).first()
+    if embedding_status.status != StatusEnum.done:
+        return {"error": "The file is not done processing"}, 400
 
     if file.user_id != current_user_id:
         return {"error": "Unauthorized"}, 401

@@ -108,3 +108,15 @@ def private_files_status():
     embeddingStatus = [{"file_id": embedding.file_id, 
                         "status": embedding.status.value} for embedding in embeddingStatus]
     return jsonify(embeddingStatus), 200
+
+#returns all the public files status
+@user_routes.route('/public_files_status', methods=['GET'])
+@jwt_required()
+def public_files_status():
+
+    current_user_id = get_jwt_identity()
+    embeddingStatus = db.session.query(EmbeddingStatus).join(Files, EmbeddingStatus.file_id == Files.id).filter(and_(Files.is_public == True, Files.user_id != current_user_id)).all()
+    
+    embeddingStatus = [{"file_id": embedding.file_id, 
+                        "status": embedding.status.value} for embedding in embeddingStatus]
+    return jsonify(embeddingStatus), 200
