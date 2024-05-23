@@ -28,7 +28,7 @@ class CreateEnumType(DDL):
 
     def __init__(self, enum):
         self.enum = enum
-        DDL.__init__(self, "CREATE TYPE %s AS ENUM (%s)" % (enum.name, enum.enum_list))
+        DDL.__init__(self, "CREATE TYPE %s AS ENUM (%s)" % (enum.name, enum.enum_class))
 
     def execute(self, bind, schema, **kw):
         try:
