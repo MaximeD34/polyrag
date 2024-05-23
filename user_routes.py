@@ -38,10 +38,15 @@ def db_selectAll(table_name):
 
 #to remove all the db and the files
 #TODO remove this route 
+import logging
 @user_routes.route('/db_drop_all', methods=['GET'])
 def db_drop_all():
-    db.drop_all()
-    db.create_all()
+    try:
+        db.drop_all()
+        db.create_all()
+    except Exception as e:
+        logging.error("Error occurred while dropping and creating all tables: %s", e)
+        return 'Error occurred while dropping and creating all tables', 500
 
     import os
 
@@ -50,11 +55,11 @@ def db_drop_all():
     import shutil
     try:
         shutil.rmtree(storage_path)
-    except:
-        return 'Error while deleting the storage path'
-        pass
-    return 'Database dropped and recreated'
+    except Exception as e:
+        logging.error("Error occurred while deleting the storage path: %s", e)
+        return 'Error while deleting the storage path', 500
 
+    return 'Database dropped and recreated', 200
 
 from models import Users
 
