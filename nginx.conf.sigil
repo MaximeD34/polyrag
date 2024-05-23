@@ -1,6 +1,6 @@
 server {
-  listen      [::]:{{ PORT }};
-  listen      {{ PORT }};
+  listen      [::]:{{ ENV "DOKKU_PROXY_PORT" }};
+  listen      {{ ENV "DOKKU_PROXY_PORT" }};
   server_name {{ APP }};
   access_log  /var/log/nginx/{{ APP }}-access.log;
   error_log   /var/log/nginx/{{ APP }}-error.log;
