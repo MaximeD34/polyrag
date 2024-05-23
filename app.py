@@ -24,43 +24,8 @@ from ai_routes import ai_routes
 storage_path = os.getenv('STORAGE_PATH', '/home/maxime/PolyRag/backend/../local_test_persistent_storage/')
 #
 
-def create_app():
 
-    print("app was created")
-    #local db url : postgres://postgres:{password}@localhost:5432/polyrag_db
-    #dokku db url : postgres://postgres:46a6bd3aecb7e1e47348ccd270ba10e4@dokku-postgres-polyrag-db:5432/polyrag_db
-
-    app = Flask(__name__)
-    
-    #configure the database
-    local_password = os.getenv('POLYRAG_DB_PASSWORD')
-    
-    url = os.getenv('DATABASE_URL', f'postgres://postgres:{local_password}@localhost:5432/polyrag_db')
-    #change the first postgres to postgresql for the url
-    url = url.replace('postgres', 'postgresql', 1)
-
-    app.config['SQLALCHEMY_DATABASE_URI'] = url
-    db.init_app(app)
-    
-    with app.app_context():
-        db.create_all()
-    #-- end of database configuration
-
-    #register the routes
-    app.register_blueprint(user_routes)
-    app.register_blueprint(login_routes)
-    app.register_blueprint(files_routes)
-    app.register_blueprint(ai_routes)
-    #--
-
-    from embeddings_manager import create_all_unexisting_embedding
-
-    # with app.app_context():
-    #     create_all_unexisting_embedding(storage_path)
-
-    return app
-
-from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token
+from flask_jwt_extended import JWTManager
 from datetime import timedelta
 def create_jwt():
     #initialize the jwt
@@ -84,8 +49,34 @@ def create_jwt():
 
     return jwt
 
-app = create_app()
+
+from application import app
+
+ #configure the database
+local_password = os.getenv('POLYRAG_DB_PASSWORD')
+#local db url : postgres://postgres:{password}@localhost:5432/polyrag_db
+#dokku db url : postgres://postgres:46a6bd3aecb7e1e47348ccd270ba10e4@dokku-postgres-polyrag-db:5432/polyrag_db
+
+
+url = os.getenv('DATABASE_URL', f'postgres://postgres:{local_password}@localhost:5432/polyrag_db')
+#change the first postgres to postgresql for the url
+url = url.replace('postgres', 'postgresql', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = url
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
+ #register the routes
+app.register_blueprint(user_routes)
+app.register_blueprint(login_routes)
+app.register_blueprint(files_routes)
+app.register_blueprint(ai_routes)
+#--
+
 jwt = create_jwt()
+
 
 #handle crashes
 @app.errorhandler(500)
@@ -95,7 +86,9 @@ def server_error(e):
 from flask_cors import CORS
 CORS(app,  methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],supports_credentials=True)
 
+
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
     app.run(host='localhost', port=port)
+

@@ -18,3 +18,20 @@ class Files(db.Model):
 
     def __repr__(self):
         return '<File %r>' % self.file_name
+    
+from enum import Enum
+from sqlalchemy import Enum as SQLEnum
+
+class StatusEnum(Enum):
+    pending = 'pending'
+    done = 'done'
+    failed = 'failed'
+
+class EmbeddingStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    file_id = db.Column(db.Integer, db.ForeignKey('files.id'), nullable=False)
+    status = db.Column(SQLEnum(StatusEnum), nullable=False) #the status of the embedding
+
+    def __repr__(self):
+        return '<Embedding %r>' % self.status
+    

@@ -52,6 +52,7 @@ def user_infos():
     else:
         return jsonify(username=user.username, email=user.email), 200
 
+#returns all the files of the current user
 @user_routes.route('/user_files', methods=['GET'])
 @jwt_required()
 def user_files():
@@ -80,3 +81,30 @@ def all_public_files():
               } for file in files]
     return jsonify(files), 200
 
+from models import EmbeddingStatus, StatusEnum
+
+# class StatusEnum(Enum):
+#     pending = 'pending'
+#     done = 'done'
+#     failed = 'failed'
+
+# class EmbeddingStatus(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     file_id = db.Column(db.Integer, db.ForeignKey('files.id'), nullable=False)
+#     status = db.Column(SQLEnum(StatusEnum), nullable=False) #the status of the embedding
+
+#     def __repr__(self):
+#         return '<Embedding %r>' % self.status
+    
+
+#returns all the private files status of the current user
+@user_routes.route('/private_files_status', methods=['GET'])
+@jwt_required()
+def private_files_status():
+
+    current_user_id = get_jwt_identity()
+    embeddingStatus = db.session.query(EmbeddingStatus).join(Files, EmbeddingStatus.file_id == Files.id).filter(Files.user_id == current_user_id).all()
+    
+    embeddingStatus = [{"file_id": embedding.file_id, 
+                        "status": embedding.status.value} for embedding in embeddingStatus]
+    return jsonify(embeddingStatus), 200

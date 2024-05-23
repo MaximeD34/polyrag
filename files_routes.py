@@ -39,6 +39,76 @@ def check_document_name(file_name):
     
     return None
 
+from application import app
+from models import EmbeddingStatus, StatusEnum
+import time
+from flask_socketio import SocketIO
+
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+#this is called on a different thread 
+def upload_file_blocking(file_data, is_public, secured_filename, current_user_id):
+
+    with app.app_context():
+        print("Uploading file: " + secured_filename)
+
+        time_start = time.time()
+
+        #get the file extension (we already checked it exists and is valid)
+        file_extension = secured_filename.split('.')[-1]
+
+        file_entity = Files(user_id=current_user_id, 
+                    file_name=secured_filename, 
+                    file_extension=file_extension, 
+                    is_public=is_public)
+        
+        db.session.add(file_entity)
+        db.session.commit()  # commit file_entity to the database
+
+        #add the file to the status table
+        embedding_status = EmbeddingStatus(file_id=file_entity.id, status=StatusEnum.pending)
+        db.session.add(embedding_status)
+        db.session.commit()
+
+        #send an update to the client
+        socketio.emit('embedding_status', {"file_id": file_entity.id, "status": StatusEnum.pending.value})
+
+        try:
+        
+            storage_path = os.getenv('STORAGE_PATH', '../local_test_persistent_storage/')
+
+            storing_path = os.path.join(storage_path, str(current_user_id)) #the path where the file will be stored
+            
+            #ensures the user directory exists or creates it
+            os.makedirs(storing_path, exist_ok=True)
+
+            #saves the file in the user folder with its id in the file name
+            with open(os.path.join(storing_path, str(file_entity.id) + "_" + secured_filename), 'wb') as f:
+                f.write(file_data)
+            #creates the embedding for the file
+            force_create_embedding(storage_path, file_entity.id, current_user_id, secured_filename)
+    
+            print("File uploaded: " + secured_filename)
+
+            time_end = time.time()
+            print("Time taken: " + str(time_end - time_start))
+
+            #update the status of the embedding
+            embedding_status.status = StatusEnum.done
+            db.session.commit() 
+
+            #send an update to the client
+            socketio.emit('embedding_status', {"file_id": file_entity.id, "status": StatusEnum.done.value})
+        except Exception as e:
+            print("Error: " + str(e))
+            #update the status of the embedding
+            embedding_status.status = StatusEnum.error
+            db.session.commit() 
+
+            #send an update to the client
+            socketio.emit('embedding_status', {"file_id": file_entity.id, "status": StatusEnum.error.value})
+
+from threading import Thread
 from flask_jwt_extended import jwt_required, get_jwt_identity
 @files_routes.route('/upload', methods=['POST'])
 @jwt_required()
@@ -73,33 +143,15 @@ def upload_file():
     else:
         return {"error": "Invalid is_public value"}, 400
 
-    #get the file extension (we already checked it exists and is valid)
-    file_extension = secured_filename.split('.')[-1]
-
-    #create the file object in the database
     current_user_id = get_jwt_identity()
-    file_entity = Files(user_id=current_user_id, 
-                 file_name=secured_filename, 
-                 file_extension=file_extension, 
-                 is_public=is_public)
-    
-    db.session.add(file_entity)
-    db.session.commit()
 
-    storage_path = os.getenv('STORAGE_PATH', '../local_test_persistent_storage/')
+    file_data = file.read() #because the file is going to be closed before the thread is started
 
-    storing_path = os.path.join(storage_path, str(current_user_id)) #the path where the file will be stored
-    
-    #ensures the user directory exists or creates it
-    os.makedirs(storing_path, exist_ok=True)
+    upload_thread = Thread(target=upload_file_blocking, args=(file_data, is_public, secured_filename, current_user_id))
+    upload_thread.start()
 
-    #saves the file in the user folder with its id in the file name
-    file.save(os.path.join(storing_path, str(file_entity.id) + "_" + secured_filename))
 
-    #creates the embedding for the file
-    force_create_embedding(storage_path, file_entity.id, current_user_id, secured_filename)
-
-    return {"message": "File uploaded successfully"}, 200
+    return {"message": "File upload started"}, 200
 
 @files_routes.route('/modify/<int:file_id>', methods=['PATCH'])
 @jwt_required()
@@ -173,12 +225,18 @@ def delete_file(file_id):
 
     import shutil
 
-    #delete the embedding from the storage
-    shutil.rmtree(os.path.join(storage_path, str(file.id) + "_embeddings"))     
-        
+    try:
+        #delete the embedding from the storage
+        shutil.rmtree(os.path.join(storage_path, str(file.id) + "_embeddings"))     
     #delete the file from the storage
-    print(os.path.join(storing_path, str(file.id) + "_" + file.file_name))
-    os.remove(os.path.join(storing_path, str(file.id) + "_" + file.file_name))
+        print(os.path.join(storing_path, str(file.id) + "_" + file.file_name))
+        os.remove(os.path.join(storing_path, str(file.id) + "_" + file.file_name))
+    except Exception as e:
+        print("Error: " + str(e))
+
+    #delete the file from the status table
+    embedding_status = EmbeddingStatus.query.filter_by(file_id=file.id).first()
+    db.session.delete(embedding_status)
 
     #delete the file from the database
     db.session.delete(file)
@@ -196,6 +254,8 @@ def list_files():
         return '<br>'.join(files)
     except Exception as e:
         return str(e)
+
+
 
 #for debugging purposes
 #TODO remove this route
