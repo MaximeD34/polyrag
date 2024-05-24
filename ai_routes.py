@@ -67,7 +67,11 @@ def query():
     if not isinstance(data, dict):
         return jsonify({"msg" : "Invalid request"}), 400
     query = data['query']
-    filecodes = data.get('filecodes', [])
+    filecodes = data['filecodes']
+
+    print("query", query)
+    print("filecodes", filecodes)
+    print(data)
     
     if not isinstance(query, str):
         return jsonify({"msg" : "Invalid query. query should be a string"}), 400
