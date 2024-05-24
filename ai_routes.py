@@ -49,6 +49,9 @@ def getAuthorizedFilesFromList(user_id, filecodes):
 from flask_jwt_extended import jwt_required, get_jwt_identity
 #--
 
+from models import EmbeddingStatus
+from llama_index.core import PromptTemplate
+
 @ai_routes.route('/query', methods=['POST'])
 @jwt_required()
 def query():
@@ -57,7 +60,8 @@ def query():
     #{
     #    "query" : String => the query,
     #    "filecodes" : [Int] => the filecodes of the files to search in (might be empty)
-    #}
+    #   "instructions" : String => the instructions for the query
+        #}
     #The function verifies that the query is a string and that the filecodes is a list of integers
     #It then searches in the files with the given filecodes IF THE USER HAS ACCESS TO THEM (and ignore them if not)
     #If no filecodes are given, it searches in all the privates files the user has access to
@@ -66,12 +70,12 @@ def query():
     data = request.json
     if not isinstance(data, dict):
         return jsonify({"msg" : "Invalid request"}), 400
-    query = data['query']
+    query = data['query'] 
+    instructions = data['instructions'] #the instructions for the query
     filecodes = data['filecodes']
 
-    print("query", query)
-    print("filecodes", filecodes)
-    print(data)
+    if instructions is None:
+        instructions = "No specific constraints."
     
     if not isinstance(query, str):
         return jsonify({"msg" : "Invalid query. query should be a string"}), 400
@@ -80,11 +84,18 @@ def query():
 
     user_id = get_jwt_identity()
 
+    #check if files are done embedding
+    for filecode in filecodes:
+        status = EmbeddingStatus.query.filter_by(file_id=filecode).first()
+        if status is None or status.status != "done":
+            return jsonify({"msg" : "Some files are not done embedding"}), 300
+
+
     authorized_files = getAuthorizedFilesFromList(user_id, filecodes)
     # print(authorized_files)
 
     if not authorized_files:
-        return jsonify({"msg" : "No authorized files to search in"}), 200
+        return jsonify({"msg" : "No authorized files to search in"}), 300
 
     from embeddings_manager import getMergedIndexWithFileIds
 
@@ -93,30 +104,24 @@ def query():
     #
     index, skippedFiles = getMergedIndexWithFileIds(storage_path, authorized_files)
 
+    query_engine = index.as_query_engine(response_mode="tree_summarize", similarity_top_k= 1 + 1 + len(authorized_files)-len(skippedFiles))
 
-    # filters = [
-    #     MetadataFilter(
-    #         key='file_name',
-    #         value=fname
-    #     )
-    #     for fname in filecodes
-    # ]
-    # filters = MetadataFilters(filters=filters, condition='or')
-    # query_engine = index.as_query_engine(filters=filters)
+    
 
-    #TODO : add a summarizer ?
-
-    # print("authorized_files", authorized_files)
-    # print("skippedFiles", skippedFiles)
-
-    retriever = VectorIndexRetriever(
-        index=index,
-        similarity_top_k= 1 + len(authorized_files)-len(skippedFiles), #+1 because the presentation files is always included
+    template = (
+    "We have provided context information below. \n"
+    "---------------------\n"
+    "{context_str}"
+    "\n---------------------\n"
+    "The user would like you to respond with the following constraints below. \n"
+    + instructions +
+    "\n---------------------\n"
+    "Given this information and the constraints, please answer the question : {query_str}\."
     )
-
-    query_engine = RetrieverQueryEngine(retriever=retriever)
+    qa_template = PromptTemplate(template)
+    query_engine.update_prompts( {"response_synthesizer:summary_template": qa_template})
     response = query_engine.query(query)
-
+     
     # Convert NodeWithScore objects to JSON
     source_nodes = [node.to_dict() for node in response.source_nodes]
 

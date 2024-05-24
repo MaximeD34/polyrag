@@ -1,5 +1,5 @@
 #init: create a document object with all the files
-from llama_index.core import StorageContext, load_index_from_storage, SimpleDirectoryReader, GPTVectorStoreIndex
+from llama_index.core import StorageContext, load_index_from_storage, SimpleDirectoryReader, GPTVectorStoreIndex, Document
 from llama_index.core.vector_stores import MetadataFilters, FilterCondition, ExactMatchFilter, MetadataFilter
 
 from database import db
@@ -7,7 +7,10 @@ from models import Files
 
 import os
 
-metadata_fn = lambda filename: {'file_name' : filename}
+from sqlalchemy.orm import joinedload
+from models import Users
+
+# metadata_fn = lambda filename: {'file_name' : filename}
 
 def force_create_embedding(storage_path, file_id, user_id, file_name):
     
@@ -18,9 +21,18 @@ def force_create_embedding(storage_path, file_id, user_id, file_name):
     doc_embedding_storage_path = os.path.join(storage_path, str(file_id)+ "_embeddings")
     pathToDocument = os.path.join(storage_path, str(user_id), str(file_id) + "_" + file_name)
     
-    document = SimpleDirectoryReader(input_files=[pathToDocument], file_metadata=metadata_fn).load_data()
+    documents = SimpleDirectoryReader(input_files=[pathToDocument]).load_data()
+
+    user_name = db.session.query(Users.username)\
+    .join(Files, Users.id == Files.user_id)\
+    .filter(Files.id == file_id)\
+    .first()[0]
+
+    print("User name is", user_name)
+
+    [document.metadata.update({'file_id': file_id, 'user_id': user_id, 'user_name': user_name, 'file_name': file_name}) for document in documents]
     
-    index = GPTVectorStoreIndex.from_documents(documents=document)
+    index = GPTVectorStoreIndex.from_documents(documents=documents)
     index.storage_context.persist(persist_dir=doc_embedding_storage_path) 
 
 def create_all_unexisting_embedding_file_list(storage_path, file_list):
@@ -33,7 +45,8 @@ def create_all_unexisting_embedding_file_list(storage_path, file_list):
     #file: (file_id, user_id, file_name)
 
     #always creates the presentation index
-    doc = SimpleDirectoryReader(input_files=["Presentation.txt"], file_metadata=metadata_fn).load_data()
+    doc = SimpleDirectoryReader(input_files=["Presentation.txt"]).load_data()
+   
     index = GPTVectorStoreIndex.from_documents(doc)
     index.storage_context.persist(persist_dir=os.path.join(storage_path, "Presentation_embeddings"))
     #-- end of presentation index creation 

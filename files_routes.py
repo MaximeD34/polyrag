@@ -42,36 +42,36 @@ def check_document_name(file_name):
 from application import app
 from models import EmbeddingStatus
 import time
-from flask_socketio import SocketIO
-from flask_socketio import SocketIO, emit
+# from flask_socketio import SocketIO
+# from flask_socketio import SocketIO, emit
 import os
 
 url_front = os.getenv('URL_FRONT', 'http://localhost:3000')
 
-socketio = SocketIO(app, cors_allowed_origins=url_front)
+# socketio = SocketIO(app, cors_allowed_origins=url_front)
 
-@socketio.on('connect')
-def handle_connect():
-    try:
-        print('Client connected')
-        emit('response', {'message': 'Connected to server'})
-    except Exception as e:
-        print(f'Error: {e}')
+# @socketio.on('connect')
+# def handle_connect():
+#     try:
+#         print('Client connected')
+#         emit('response', {'message': 'Connected to server'})
+#     except Exception as e:
+#         print(f'Error: {e}')
 
-@socketio.on('message')
-def handle_message(data):
-    try:
-        print('Message received:', data)
-        emit('response', {'message': 'Message received'})
-    except Exception as e:
-        print(f'Error: {e}')
+# @socketio.on('message')
+# def handle_message(data):
+#     try:
+#         print('Message received:', data)
+#         emit('response', {'message': 'Message received'})
+#     except Exception as e:
+#         print(f'Error: {e}')
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    try:
-        print('Client disconnected')
-    except Exception as e:
-        print(f'Error: {e}')
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     try:
+#         print('Client disconnected')
+#     except Exception as e:
+#         print(f'Error: {e}')
 
 #this is called on a different thread 
 def upload_file_blocking(file_data, is_public, secured_filename, current_user_id):
@@ -98,8 +98,8 @@ def upload_file_blocking(file_data, is_public, secured_filename, current_user_id
         db.session.commit()
 
         #send an update to the client
-        socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "pending"})
-        print("emmited")
+        # socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "pending"})
+ 
 
         try:
         
@@ -126,16 +126,13 @@ def upload_file_blocking(file_data, is_public, secured_filename, current_user_id
             db.session.commit() 
 
             #send an update to the client
-            socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "done"})
-            print("emmited")
+            # socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "done"})
+     
         except Exception as e:
             print("Error: " + str(e))
             #update the status of the embedding
             embedding_status.status = "error"
             db.session.commit() 
-
-            #send an update to the client
-            socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "error"})
 
 from threading import Thread
 from flask_jwt_extended import jwt_required, get_jwt_identity
