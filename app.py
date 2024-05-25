@@ -35,7 +35,7 @@ def create_jwt():
     app.config['JWT_COOKIE_CSRF_PROTECT'] = True
     app.config['JWT_CSRF_CHECK_FORM'] = False
     app.config['JWT_CSRF_METHODS'] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=30)
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=14)
     app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
     app.config['JWT_COOKIE_SECURE'] = False  # TODO Set to True if using HTTPS
