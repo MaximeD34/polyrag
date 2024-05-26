@@ -27,3 +27,20 @@ class EmbeddingStatus(db.Model):
     def __repr__(self):
         return '<Embedding %r>' % self.status
     
+class Admin(db.Model):
+    id_user = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+class Query(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    used_files = db.Column(db.ARRAY(db.Integer), nullable=False)
+    question = db.Column(db.String(1024), nullable=False)
+    instructions = db.Column(db.String(1024), nullable=False)
+    answer = db.Column(db.String(1024), nullable=False) #possibly truncated to 1024 characters
+    query_date = db.Column(db.DateTime, nullable=False)
+
+    def __repr__(self):
+        return f'<Query {self.query!r}><Answer {self.answer!r}><Date {self.query_date!r}><Instructions {self.instructions!r}><User {self.user_id!r}>'
+    
+    

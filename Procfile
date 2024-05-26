@@ -1,1 +1,1 @@
-web: gunicorn app:app --timeout 120
+web: gunicorn app:app --timeout 120 --workers 3 --limit-request-field_size 30000

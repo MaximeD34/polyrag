@@ -29,6 +29,8 @@ from flask_jwt_extended import JWTManager
 from datetime import timedelta
 def create_jwt():
     #initialize the jwt
+    app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024  # 30 megabytes
+
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'local_jwt_secret_key')
     app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
     app.config['JWT_TOKEN_LOCATION'] = ['cookies']

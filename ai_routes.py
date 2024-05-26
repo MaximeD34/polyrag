@@ -49,7 +49,7 @@ def getAuthorizedFilesFromList(user_id, filecodes):
 from flask_jwt_extended import jwt_required, get_jwt_identity
 #--
 
-from models import EmbeddingStatus
+from models import EmbeddingStatus, Query
 from llama_index.core import PromptTemplate
 
 @ai_routes.route('/query', methods=['POST'])
@@ -106,8 +106,6 @@ def query():
 
     query_engine = index.as_query_engine(response_mode="tree_summarize", similarity_top_k= 1 + 1 + len(authorized_files)-len(skippedFiles))
 
-    
-
     template = (
     "We have provided context information below. \n"
     "---------------------\n"
@@ -132,5 +130,22 @@ def query():
         "metadata" : response.metadata,
         "source_nodes" : source_nodes
     }
+
+    #store the query in the database
+    from datetime import datetime
+
+    used_files = [filecode for filecode in authorized_files if filecode not in skippedFiles] 
+
+    #check the strings lenghth and truncate if necessary
+    if len(query) > 1024:
+        query = query[:1000] + "..."
+    if len(instructions) > 1024:
+        instructions = instructions[:1000] + "..."
+    if len(response.response) > 1024:
+        response.response = response.response[:1000] + "..."
+
+    new_query = Query(user_id=user_id, question=query, used_files=used_files, instructions=instructions, answer=response.response, query_date=datetime.now())
+    db.session.add(new_query)
+    db.session.commit()
     
     return json , 200

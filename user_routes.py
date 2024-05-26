@@ -61,7 +61,7 @@ def db_drop_all():
 
     return 'Database dropped and recreated', 200
 
-from models import Users
+from models import Users, Admin
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -74,7 +74,8 @@ def user_infos():
     if user is None:
         return {"error": "User not found"}, 404
     else:
-        return jsonify(username=user.username, email=user.email), 200
+        is_admin = Admin.query.filter_by(id_user=current_user_id).first() is not None
+        return jsonify(username=user.username, email=user.email, is_admin=is_admin), 200
 
 #returns all the files of the current user
 @user_routes.route('/user_files', methods=['GET'])
@@ -88,7 +89,6 @@ def user_files():
               "author": db.session.query(Users.username).filter(Users.id == file.user_id).first()[0]
               } for file in files]
     return jsonify(files), 200
-
 
 
 #returns all the public files EXCEPT the ones of the current user
@@ -106,20 +106,6 @@ def all_public_files():
     return jsonify(files), 200
 
 from models import EmbeddingStatus
-
-# class StatusEnum(Enum):
-#     pending = 'pending'
-#     done = 'done'
-#     failed = 'failed'
-
-# class EmbeddingStatus(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     file_id = db.Column(db.Integer, db.ForeignKey('files.id'), nullable=False)
-#     status = db.Column(SQLEnum(StatusEnum), nullable=False) #the status of the embedding
-
-#     def __repr__(self):
-#         return '<Embedding %r>' % self.status
-    
 
 #returns all the private files status of the current user
 @user_routes.route('/private_files_status', methods=['GET'])
@@ -144,3 +130,93 @@ def public_files_status():
     embeddingStatus = [{"file_id": embedding.file_id, 
                         "status": embedding.status} for embedding in embeddingStatus]
     return jsonify(embeddingStatus), 200
+
+from models import Query
+
+#returns the history of the current user
+@user_routes.route('/history', methods=['GET'])
+@jwt_required()
+def history():
+    current_user_id = get_jwt_identity()
+
+    queries = db.session.query(Query, Users.username).join(Users, Users.id == Query.user_id).filter(Query.user_id == current_user_id).all()
+
+    # For each query, get the file names from the Files table
+    for query, username in queries:
+        file_names = db.session.query(Files.file_name).filter(Files.id.in_(query.used_files)).all()
+        query.file_names = [file[0] for file in file_names]
+
+    queries = [{"id": query.id,
+            "user_id": query.user_id,
+            "used_files": query.used_files,
+            "question": query.question,
+            "instructions": query.instructions,
+            "answer": query.answer,
+            "query_date": query.query_date,
+            "username": username,
+            "file_names": query.file_names
+            
+            } for query, username in queries]
+    
+    return jsonify(queries), 200
+
+    
+#returns the history of all the users (only for admins)
+@user_routes.route('/all_history', methods=['GET'])
+@jwt_required()
+def all_history():
+    current_user_id = get_jwt_identity()
+    if Admin.query.filter_by(id_user=current_user_id).first() is None:
+        return {"error": "Unauthorized access"}, 401
+
+    queries = db.session.query(Query, Users.username).join(Users, Users.id == Query.user_id).all()
+
+    # For each query, get the file names from the Files table
+    for query, username in queries:
+        file_names = db.session.query(Files.file_name).filter(Files.id.in_(query.used_files)).all()
+        query.file_names = [file[0] for file in file_names]
+
+    queries = [{"id": query.id,
+            "user_id": query.user_id,
+            "used_files": query.used_files,
+            "question": query.question,
+            "instructions": query.instructions,
+            "answer": query.answer,
+            "query_date": query.query_date,
+            "username": username,
+            "file_names": query.file_names
+            
+            } for query, username in queries]
+
+    return jsonify(queries), 200
+
+#returns the analytics of the current user
+@user_routes.route('/analytics', methods=['GET'])
+@jwt_required()
+def analytics():
+    current_user_id = get_jwt_identity()
+
+    nb_queries = db.session.query(Query).filter(Query.user_id == current_user_id).count() 
+    username = db.session.query(Users.username).filter(Users.id == current_user_id).first()[0]
+    if username is None:
+        return {"error": "User not found"}, 404
+
+    return jsonify([{"id": current_user_id,
+                    "username": username,
+                     "nb_queries": nb_queries}]), 200
+
+#returns the analytics of all the users (only for admins)
+@user_routes.route('/all_analytics', methods=['GET'])
+@jwt_required()
+def all_analytics():
+    current_user_id = get_jwt_identity()
+    if Admin.query.filter_by(id_user=current_user_id).first() is None:
+        return {"error": "Unauthorized access"}, 401
+
+    analytics = db.session.query(Query.user_id, Users.username, db.func.count(Query.id)).join(Users, Users.id == Query.user_id).group_by(Query.user_id, Users.username).all()
+    
+    analytics = [{"id": user_id,
+                  "username": username,
+                  "nb_queries": nb_queries} for user_id, username, nb_queries in analytics]
+
+    return jsonify(analytics), 200
