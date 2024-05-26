@@ -40,7 +40,7 @@ def create_jwt():
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=30)
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=14)
     app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
-    app.config['JWT_COOKIE_SECURE'] = False  # TODO Set to True if using HTTPS
+    app.config['JWT_COOKIE_SECURE'] = False  
     if os.getenv('FLASK_ENV') == 'production':
         app.config['JWT_COOKIE_DOMAIN'] = '.cluster-ig3.igpolytech.fr'
     else:

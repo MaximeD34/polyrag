@@ -77,7 +77,6 @@ def refresh():
     set_access_cookies(response, new_access_token)
     return response
 
-#TODO put all the env in a file
 import os
 
 @login_routes.route('/logout', methods=['POST'])

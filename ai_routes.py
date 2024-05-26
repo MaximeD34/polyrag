@@ -12,8 +12,6 @@ from flask import Blueprint, jsonify, request
 
 ai_routes = Blueprint('ai_routes', __name__)
 
-#TODO : make the index persitent across deployments
-
 #init: create a document object with all the files
 from llama_index.core import StorageContext, load_index_from_storage, VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.vector_stores import MetadataFilters, FilterCondition, ExactMatchFilter, MetadataFilter

@@ -282,23 +282,23 @@ def delete_file(file_id):
 
 #for debugging purposes
 #TODO remove this route
-@files_routes.route('/list_files')
-def list_files():
-    try:
-        storage_path = os.getenv('STORAGE_PATH', '../test_storage') #TODO import from app.py instead of redefining it
-        files = os.listdir(storage_path)
-        return '<br>'.join(files)
-    except Exception as e:
-        return str(e)
+# @files_routes.route('/list_files')
+# def list_files():
+#     try:
+#         storage_path = os.getenv('STORAGE_PATH', '../test_storage') #TODO import from app.py instead of redefining it
+#         files = os.listdir(storage_path)
+#         return '<br>'.join(files)
+#     except Exception as e:
+#         return str(e)
 
 
 
 #for debugging purposes
-#TODO remove this route
-@files_routes.route('/debug', methods=['GET'])
-def debug():
-    try:
-        directories = os.listdir('/app')
-    except Exception as e:
-        directories = str(e)
-    return {"directories": directories}, 200
+# #TODO remove this route
+# @files_routes.route('/debug', methods=['GET'])
+# def debug():
+#     try:
+#         directories = os.listdir('/app')
+#     except Exception as e:
+#         directories = str(e)
+#     return {"directories": directories}, 200

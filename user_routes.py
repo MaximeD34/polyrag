@@ -21,45 +21,45 @@ from sqlalchemy import inspect
 # ---------
 # TODO TO REMOVE (debugging purposes)
 
-#TODO remove this route
-@user_routes.route('/db_selectAll/<table_name>', methods=['GET'])
-def db_selectAll(table_name):
-    inspector = inspect(db.engine)
+# #TODO remove this route
+# @user_routes.route('/db_selectAll/<table_name>', methods=['GET'])
+# def db_selectAll(table_name):
+#     inspector = inspect(db.engine)
 
-    if table_name in inspector.get_table_names():
-        table = db.Model.metadata.tables[table_name]
-        query = db.session.query(table).all()
-        return jsonify([row._asdict() for row in query])
-    else:
-        return {"error": "Table not found"}, 404
+#     if table_name in inspector.get_table_names():
+#         table = db.Model.metadata.tables[table_name]
+#         query = db.session.query(table).all()
+#         return jsonify([row._asdict() for row in query])
+#     else:
+#         return {"error": "Table not found"}, 404
 
 # TODO TO REMOVE (debugging purposes)
 # ---------
 
 #to remove all the db and the files
-#TODO remove this route 
-import logging
-@user_routes.route('/db_drop_all', methods=['GET'])
-def db_drop_all():
-    try:
-        db.drop_all()
-        db.create_all()
-    except Exception as e:
-        logging.error("Error occurred while dropping and creating all tables: %s", e)
-        return 'Error occurred while dropping and creating all tables', 500
+# #TODO remove this route 
+# import logging
+# @user_routes.route('/db_drop_all', methods=['GET'])
+# def db_drop_all():
+#     try:
+#         db.drop_all()
+#         db.create_all()
+#     except Exception as e:
+#         logging.error("Error occurred while dropping and creating all tables: %s", e)
+#         return 'Error occurred while dropping and creating all tables', 500
 
-    import os
+#     import os
 
-    #remove all the files
-    storage_path = os.getenv('STORAGE_PATH', '../local_test_persistent_storage/')
-    import shutil
-    try:
-        shutil.rmtree(storage_path)
-    except Exception as e:
-        logging.error("Error occurred while deleting the storage path: %s", e)
-        return 'Error while deleting the storage path', 500
+#     #remove all the files
+#     storage_path = os.getenv('STORAGE_PATH', '../local_test_persistent_storage/')
+#     import shutil
+#     try:
+#         shutil.rmtree(storage_path)
+#     except Exception as e:
+#         logging.error("Error occurred while deleting the storage path: %s", e)
+#         return 'Error while deleting the storage path', 500
 
-    return 'Database dropped and recreated', 200
+#     return 'Database dropped and recreated', 200
 
 #route to put userid 1 as admin
 
