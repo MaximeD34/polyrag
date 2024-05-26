@@ -88,11 +88,23 @@ def getMergedIndexWithFileIds(storage_path, file_ids):
 #       the merged index of the embeddings of the files or just the presentation index if no correct embeddings are found
 #   unavailable_files: [Int], the list of files whose embeddings were not found or corrupted. 
 #       If all the embeddings are found, it will be an empty list
+    try:
+        #create the base index with the presentation.txt file
+        storageContext = StorageContext.from_defaults(persist_dir=os.path.join(storage_path, "Presentation_embeddings"))
+            
+        #insert the embedded nodes of the document inside the index
+        index = load_index_from_storage(storageContext)
+    except:
+        #always creates the presentation index
+        doc = SimpleDirectoryReader(input_files=["Presentation.txt"]).load_data()
     
-    #create the base index with the presentation.txt file
-    storageContext = StorageContext.from_defaults(persist_dir=os.path.join(storage_path, "Presentation_embeddings"))
-    index = load_index_from_storage(storageContext)
-    
+        index = GPTVectorStoreIndex.from_documents(doc)
+        index.storage_context.persist(persist_dir=os.path.join(storage_path, "Presentation_embeddings"))
+        storageContext = StorageContext.from_defaults(persist_dir=os.path.join(storage_path, "Presentation_embeddings"))        
+        #insert the embedded nodes of the document inside the index
+        index = load_index_from_storage(storageContext)
+        
+
     unavailable_files = []
     file_list = []
 
