@@ -61,6 +61,19 @@ def db_drop_all():
 
     return 'Database dropped and recreated', 200
 
+#route to put userid 1 as admin
+
+@user_routes.route('/create_admin', methods=['GET'])
+def create_admin():
+    new_admin = Admin(id_user=1, approved_by=1)
+    try:
+        db.session.add(new_admin)
+        db.session.commit()
+    except:
+        return "Already added"
+
+    return 'Admin 1 added', 200
+
 from models import Users, Admin
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
