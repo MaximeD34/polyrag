@@ -43,8 +43,6 @@ def login():
     email = data.get('email', None)
     password = data.get('password', None)
 
-    print("login", email, password)
-
     user = Users.query.filter_by(email=email).first()
     if user and check_password_hash(user.hashed_password, password):
         user_id = user.id

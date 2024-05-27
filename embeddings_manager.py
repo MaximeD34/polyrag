@@ -28,8 +28,6 @@ def force_create_embedding(storage_path, file_id, user_id, file_name):
     .filter(Files.id == file_id)\
     .first()[0]
 
-    print("User name is", user_name)
-
     [document.metadata.update({'file_id': file_id, 'user_id': user_id, 'user_name': user_name, 'file_name': file_name}) for document in documents]
     
     index = GPTVectorStoreIndex.from_documents(documents=documents)
