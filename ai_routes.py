@@ -21,8 +21,6 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 from database import db
 from models import Files
 
-
-
 def getAuthorizedFilesFromList(user_id, filecodes):
     #This function returns as [Int] the filecodes the user has access to from the list of filecodes
     #If the user has access to all the files, it returns the list of filecodes

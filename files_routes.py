@@ -48,31 +48,6 @@ import os
 
 url_front = os.getenv('URL_FRONT', 'http://localhost:3000')
 
-# socketio = SocketIO(app, cors_allowed_origins=url_front)
-
-# @socketio.on('connect')
-# def handle_connect():
-#     try:
-#         print('Client connected')
-#         emit('response', {'message': 'Connected to server'})
-#     except Exception as e:
-#         print(f'Error: {e}')
-
-# @socketio.on('message')
-# def handle_message(data):
-#     try:
-#         print('Message received:', data)
-#         emit('response', {'message': 'Message received'})
-#     except Exception as e:
-#         print(f'Error: {e}')
-
-# @socketio.on('disconnect')
-# def handle_disconnect():
-#     try:
-#         print('Client disconnected')
-#     except Exception as e:
-#         print(f'Error: {e}')
-
 #this is called on a different thread 
 def upload_file_blocking(file_data, is_public, secured_filename, current_user_id):
 
@@ -96,10 +71,6 @@ def upload_file_blocking(file_data, is_public, secured_filename, current_user_id
         embedding_status = EmbeddingStatus(file_id=file_entity.id, status="pending")
         db.session.add(embedding_status)
         db.session.commit()
-
-        #send an update to the client
-        # socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "pending"})
- 
 
         try:
         
@@ -125,9 +96,6 @@ def upload_file_blocking(file_data, is_public, secured_filename, current_user_id
             embedding_status.status = "done"
             db.session.commit() 
 
-            #send an update to the client
-            # socketio.emit('embedding_status', {"file_id": file_entity.id, "status": "done"})
-     
         except Exception as e:
             print("Error: " + str(e))
             #update the status of the embedding
@@ -206,7 +174,6 @@ def modify_file(file_id):
 
     #get a secure filename
     secured_filename = secure_filename(request.form['file_name'])
-    print(secured_filename)
 
     #check if the file name is valid
     check = check_document_name(secured_filename)

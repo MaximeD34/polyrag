@@ -132,7 +132,7 @@ def private_files_status():
                         "status": embedding.status} for embedding in embeddingStatus]
     return jsonify(embeddingStatus), 200
 
-#returns all the public files status
+#returns all the public files status EXCEPT the ones of the current user
 @user_routes.route('/public_files_status', methods=['GET'])
 @jwt_required()
 def public_files_status():
